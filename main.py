@@ -124,3 +124,66 @@ class CortexManifest:
     def digest_hex(self) -> str:
         blob = json.dumps(
             {
+                "tag": BUILD_TAG,
+                "roster": self.roster_tuple(),
+                "fee_bps": self.fee_bps,
+                "budget": self.complexity_budget,
+                "epoch": self.epoch_tick,
+            },
+            sort_keys=True,
+        ).encode()
+        return hashlib.sha256(XAZA_TRACE_SALT + blob).hexdigest()
+
+
+def default_manifest() -> CortexManifest:
+    return CortexManifest(
+        address_a=ADDRESS_A,
+        address_b=ADDRESS_B,
+        address_c=ADDRESS_C,
+        address_d=ADDRESS_D,
+        address_e=ADDRESS_E,
+        address_f=ADDRESS_F,
+        fee_bps=XAZA_DEFAULT_FEE_BPS,
+        complexity_budget=XAZA_COMPLEXITY_BUDGET,
+        epoch_tick=XAZA_EPOCH_TICK,
+    )
+
+
+
+def _now_iso() -> str:
+    return _dt.datetime.now().astimezone().isoformat(timespec='seconds')
+
+
+def _clamp(x: float, lo: float, hi: float) -> float:
+    return lo if x < lo else hi if x > hi else x
+
+
+def _sha256(b: bytes) -> bytes:
+    return hashlib.sha256(b).digest()
+
+
+def _lane_id(prefix: str) -> str:
+    n = int.from_bytes(_sha256(prefix.encode() + uuid.uuid4().bytes)[:10], 'big')
+    alphabet = string.ascii_lowercase + string.digits
+    out = []
+    while n:
+        n, r = divmod(n, 36)
+        out.append(alphabet[r])
+    body = ''.join(reversed(out)) or '0'
+    return f'{prefix}_{body[:14]}'
+
+
+def _wrap(text: str, width: int = 88) -> str:
+    return '\n'.join(textwrap.fill(line, width=width) if line.strip() else '' for line in text.splitlines())
+
+
+def wei_to_gwei(wei: int) -> float:
+    return wei / 1_000_000_000
+
+
+def gwei_to_wei(gwei: float) -> int:
+    return int(round(gwei * 1_000_000_000))
+
+
+def eth_to_wei(eth: float) -> int:
+    return int(round(eth * 10**18))
