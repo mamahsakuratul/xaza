@@ -61,3 +61,66 @@ XAZA_DB_NAME = "xaza_lane.sqlite3"
 BUILD_TAG = "xaza::2026-05-26::py-violet-abacus"
 
 
+class XzLaneFault(RuntimeError):
+    """Base fault for xaza lanes."""
+
+
+class XzParseFault(XzLaneFault):
+    pass
+
+
+class XzEvalFault(XzLaneFault):
+    pass
+
+
+class XzBudgetFault(XzLaneFault):
+    pass
+
+
+class XzUnitFault(XzLaneFault):
+    pass
+
+
+class XzMatrixFault(XzLaneFault):
+    pass
+
+
+class XzSessionFault(XzLaneFault):
+    pass
+
+
+class XzAccessFault(XzLaneFault):
+    pass
+
+
+class LaneMode(enum.Enum):
+    STRICT = "strict"
+    LENIENT = "lenient"
+    AUDIT = "audit"
+
+
+@dataclasses.dataclass(frozen=True)
+class CortexManifest:
+    address_a: str
+    address_b: str
+    address_c: str
+    address_d: str
+    address_e: str
+    address_f: str
+    fee_bps: int
+    complexity_budget: int
+    epoch_tick: int
+
+    def roster_tuple(self) -> tuple[str, ...]:
+        return (
+            self.address_a,
+            self.address_b,
+            self.address_c,
+            self.address_d,
+            self.address_e,
+            self.address_f,
+        )
+
+    def digest_hex(self) -> str:
+        blob = json.dumps(
+            {
